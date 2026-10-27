@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ci-beauty — Skincare, maquillaje y cabello</title>
+<meta name="description" content="ci-beauty: skincare, maquillaje y cuidado del cabello. Pide por WhatsApp.">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  /* ====== CAMBIA AQUÍ LOS COLORES DE LA MARCA ====== */
+  :root{
+    --bg:#fbf1f4;          /* fondo rosa perla claro */
+    --rose:#d46f97;        /* rosa (color principal) */
+    --lilac:#9b7ad8;       /* lila */
+    --text:#2b1a24;
+    --muted:#86707c;
+    --line:rgba(140,70,100,.16);
+    --glass:rgba(255,250,252,.6);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;overflow-x:hidden}
+  #scene{position:fixed;inset:0;z-index:0}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+  .hud{position:fixed;inset:16px;z-index:10;pointer-events:none}
+  .hud span{position:absolute;width:14px;height:14px;border-color:var(--rose)}
+  .hud .tl{top:0;left:0;border-top:1px solid;border-left:1px solid}
+  .hud .tr{top:0;right:0;border-top:1px solid;border-right:1px solid}
+  .hud .bl{bottom:0;left:0;border-bottom:1px solid;border-left:1px solid}
+  .hud .br{bottom:0;right:0;border-bottom:1px solid;border-right:1px solid}
+
+  header{position:fixed;top:28px;left:40px;right:40px;z-index:20;display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;letter-spacing:.12em;font-size:11px}
+  header nav{display:flex;gap:26px}
+  header a{color:var(--text);text-decoration:none;opacity:.75;transition:opacity .2s}
+  header a:hover{opacity:1}
+  .logo{font-family:'Inter',sans-serif;font-weight:600;letter-spacing:.35em;font-size:13px;text-transform:lowercase}
+  .logo em{font-style:normal;color:var(--rose)}
+
+  .status{position:fixed;bottom:28px;left:40px;right:40px;z-index:20;display:flex;justify-content:space-between;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.15em}
+  .bar{width:120px;height:1px;background:var(--line);position:relative;display:inline-block;vertical-align:middle;margin-left:10px}
+  .bar i{position:absolute;left:0;top:0;height:1px;background:var(--rose);width:0}
+
+  main{position:relative;z-index:15}
+  section{min-height:100vh;padding:120px 8vw;display:flex;flex-direction:column;justify-content:center}
+  .eyebrow{color:var(--lilac);font-size:11px;letter-spacing:.25em;text-transform:uppercase;margin-bottom:22px}
+  h1{font-family:'Inter',sans-serif;font-weight:300;font-size:clamp(44px,8vw,120px);line-height:.95;letter-spacing:-.03em;text-transform:uppercase}
+  h1 b,h2 b{font-weight:600;background:linear-gradient(180deg,var(--rose) 30%,var(--lilac));-webkit-background-clip:text;background-clip:text;color:transparent}
+  h2{font-family:'Inter',sans-serif;font-weight:300;font-size:clamp(30px,4.5vw,60px);text-transform:uppercase;letter-spacing:-.02em;margin-bottom:20px;line-height:1}
+  p.lead{max-width:470px;color:var(--muted);line-height:1.8;margin-top:22px}
+  .right{align-items:flex-end;text-align:right}
+  .right p.lead{margin-left:auto}
+
+  .btn{display:inline-block;margin-top:30px;padding:14px 26px;border:1px solid var(--rose);color:var(--rose);text-decoration:none;text-transform:uppercase;letter-spacing:.2em;font-size:11px;transition:all .25s;width:max-content;background:none;font-family:inherit;cursor:pointer}
+  .btn:hover{background:var(--rose);color:var(--bg)}
+  .btn.solid{background:var(--rose);color:var(--bg)}
+  .btn.solid:hover{background:transparent;color:var(--rose)}
+
+  /* ====== Catálogo ====== */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 24px}
+  .filters button{background:none;border:1px solid var(--line);color:var(--muted);padding:9px 16px;font-family:inherit;font-size:10px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+  .filters button.active,.filters button:hover{border-color:var(--rose);color:var(--rose)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+  .card{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:18px;display:flex;flex-direction:column;gap:14px;transition:background .3s}
+  .card:hover{background:rgba(212,111,151,.08)}
+  .card.hide{display:none}
+  .card .img{aspect-ratio:1/1;border:1px solid var(--line);overflow:hidden;position:relative;
+    background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.35),transparent 40%),linear-gradient(140deg,rgba(255,200,220,.35),rgba(201,167,255,.25))}
+  .card .img img{width:100%;height:100%;object-fit:cover;display:block}
+  .card .img .ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:10px;letter-spacing:.2em;text-transform:uppercase}
+  .card small{color:var(--muted);font-size:10px;letter-spacing:.2em;text-transform:uppercase}
+  .card h3{font-family:'Inter',sans-serif;font-weight:600;font-size:16px;text-transform:uppercase;letter-spacing:.04em}
+  .card .row{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+  .price{color:var(--rose);font-size:14px}
+  .buy{background:none;border:1px solid var(--rose);color:var(--rose);padding:8px 12px;font-family:inherit;font-size:10px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+  .buy:hover{background:var(--rose);color:var(--bg)}
+
+  /* ====== Sobre la marca ====== */
+  .values{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:36px;max-width:760px;width:100%}
+  .values div{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:22px;text-align:left}
+  .values b{display:block;color:var(--rose);font-weight:400;font-size:11px;letter-spacing:.2em;margin-bottom:10px}
+  .values p{color:var(--muted);line-height:1.6}
+
+  /* ====== Reseñas ====== */
+  .reviews{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:10px}
+  .review{background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:24px;min-height:170px;display:flex;flex-direction:column;justify-content:space-between;gap:16px}
+  .review p{line-height:1.7;color:var(--muted);font-style:italic}
+  .review small{color:var(--rose);letter-spacing:.2em;text-transform:uppercase;font-size:10px}
+
+  footer{position:relative;z-index:15;padding:40px 8vw 90px;border-top:1px solid var(--line);display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;color:var(--muted);font-size:10px;letter-spacing:.15em;text-transform:uppercase}
+  footer a{color:var(--muted);text-decoration:none}
+  footer a:hover{color:var(--rose)}
+
+  /* ====== WhatsApp flotante ====== */
+  .wa{position:fixed;right:40px;bottom:64px;z-index:30;width:54px;height:54px;border-radius:50%;background:var(--rose);display:grid;place-items:center;box-shadow:0 0 0 0 rgba(255,200,220,.6);animation:pulse 2.4s infinite;transition:transform .2s}
+  .wa:hover{transform:scale(1.08)}
+  .wa svg{width:26px;height:26px;fill:var(--bg)}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,200,220,.55)}70%{box-shadow:0 0 0 18px rgba(255,200,220,0)}100%{box-shadow:0 0 0 0 rgba(255,200,220,0)}}
+
+  .reveal{opacity:0;transform:translateY(30px);transition:opacity 1s ease,transform 1s ease}
+  .reveal.on{opacity:1;transform:none}
+
+  @media (max-width:760px){
+    header,.status{left:26px;right:26px}
+    header nav{gap:12px;font-size:10px}
+    header nav a.hide-sm{display:none}
+    section{padding:110px 26px}
+    .right{align-items:flex-start;text-align:left}
+    .right p.lead{margin-left:0}
+    .wa{right:26px;bottom:60px}
+    .status #coords{display:none}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+<div class="hud"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
+
+<header>
+  <a href="#inicio" class="logo">ci<em>-</em>beauty</a>
+  <nav>
+    <a href="#tienda" class="scramble">Tienda</a>
+    <a href="#marca" class="scramble hide-sm">La marca</a>
+    <a href="#resenas" class="scramble hide-sm">Reseñas</a>
+    <a href="#contacto" class="scramble">Contacto</a>
+  </nav>
+</header>
+
+<div class="status">
+  <span id="coords">MEDELLÍN — CO</span>
+  <span>Scroll <span class="bar"><i id="progress"></i></span></span>
+</div>
+
+<main>
+  <!-- ====== INICIO ====== -->
+  <section id="inicio">
+    <div class="eyebrow scramble">[ 001 ] — Skincare · Maquillaje · Cabello</div>
+    <h1 class="reveal">Belleza<br><b>que brilla</b><br>contigo</h1>
+    <p class="lead reveal">Escribe aquí la frase de tu marca. Ej.: productos seleccionados para cuidar tu piel, resaltar tu rostro y consentir tu cabello.</p>
+    <a href="#tienda" class="btn solid reveal">Ver productos</a>
+  </section>
+
+  <!-- ====== TIENDA ====== -->
+  <section id="tienda">
+    <div class="eyebrow scramble">[ 002 ] — Tienda</div>
+    <h2 class="reveal">Nuestros <b>productos</b></h2>
+    <div class="filters reveal">
+      <button class="active" data-cat="todo">Todo</button>
+      <button data-cat="skincare">Skincare</button>
+      <button data-cat="maquillaje">Maquillaje</button>
+      <button data-cat="cabello">Cabello</button>
+    </div>
+
+    <!--
+      PARA AGREGAR O EDITAR PRODUCTOS: copia un bloque <div class="card">…</div>
+      - data-cat: skincare | maquillaje | cabello
+      - Reemplaza <div class="ph">Tu foto</div> por <img src="foto.jpg" alt="Nombre">
+      - El botón "Pedir" abre WhatsApp con el nombre y precio del producto
+    -->
+    <div class="grid reveal" id="catalogo">
+      <div class="card" data-cat="skincare">
+        <div class="img"><div class="ph">Tu foto</div></div>
+        <small>Skincare</small><h3>Sérum hidratante</h3>
+        <div class="row"><span class="price">$00.000</span><button class="buy">Pedir</button></div>
+      </div>
+      <div class="card" data-cat="skincare">
+        <div class="img"><div class="ph">Tu foto</div></div>
+        <small>Skincare</small><h3>Limpiador facial</h3>
+        <div class="row"><span class="price">$00.000</span><button class="buy">Pedir</button></div>
+      </div>
+      <div class="card" data-cat="maquillaje">
+        <div class="img"><div class="ph">Tu foto</div></div>
+        <small>Maquillaje</small><h3>Labial mate</h3>
+        <div class="row"><span class="price">$00.000</span><button class="buy">Pedir</button></div>
+      </div>
+      <div class="card" data-cat="maquillaje">
+        <div class="img"><div class="ph">Tu foto</div></div>
+        <small>Maquillaje</small><h3>Base líquida</h3>
+        <div class="row"><span class="price">$00.000</span><button class="buy">Pedir</button></div>
+      </div>
+      <div class="card" data-cat="cabello">
+        <div class="img"><div class="ph">Tu foto</div></div>
+        <small>Cabello</small><h3>Mascarilla capilar</h3>
+        <div class="row"><span class="price">$00.000</span><button class="buy">Pedir</button></div>
+      </div>
+      <div class="card" data-cat="cabello">
+        <div class="img"><div class="ph">Tu foto</div></div>
+        <small>Cabello</small><h3>Aceite reparador</h3>
+        <div class="row"><span class="price">$00.000</span><button class="buy">Pedir</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== LA MARCA ====== -->
+  <section id="marca" class="right">
+    <div class="eyebrow scramble">[ 003 ] — La marca</div>
+    <h2 class="reveal">Hecho con<br><b>intención</b></h2>
+    <p class="lead reveal">Cuenta aquí la historia de ci-beauty: cómo nació, por qué la creaste y qué la hace diferente. Dos o tres frases cortas funcionan mejor.</p>
+    <div class="values reveal">
+      <div><b>01 — CALIDAD</b><p>Escribe tu primer diferencial.</p></div>
+      <div><b>02 — ASESORÍA</b><p>Escribe tu segundo diferencial.</p></div>
+      <div><b>03 — ENVÍOS</b><p>Ej.: envíos a toda Colombia.</p></div>
+    </div>
+  </section>
+
+  <!-- ====== RESEÑAS ====== -->
+  <section id="resenas">
+    <div class="eyebrow scramble">[ 004 ] — Reseñas</div>
+    <h2 class="reveal">Lo que dicen<br><b>nuestras clientas</b></h2>
+    <!-- Pega aquí reseñas REALES de tus clientas (con su permiso) -->
+    <div class="reviews reveal">
+      <div class="review"><p>Pega aquí una reseña real de una clienta.</p><small>— Nombre, ciudad</small></div>
+      <div class="review"><p>Pega aquí una reseña real de una clienta.</p><small>— Nombre, ciudad</small></div>
+      <div class="review"><p>Pega aquí una reseña real de una clienta.</p><small>— Nombre, ciudad</small></div>
+    </div>
+    <a class="btn reveal" id="ig" href="#" target="_blank" rel="noopener">Síguenos en Instagram</a>
+  </section>
+
+  <!-- ====== CONTACTO ====== -->
+  <section id="contacto" class="right">
+    <div class="eyebrow scramble">[ 005 ] — Contacto</div>
+    <h2 class="reveal">¿Te <b>asesoramos</b>?</h2>
+    <p class="lead reveal">Escríbenos por WhatsApp y te ayudamos a elegir la rutina ideal para tu piel y tu cabello.</p>
+    <a class="btn solid reveal" id="wa-cta" href="#" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+  </section>
+</main>
+
+<footer>
+  <span>© <span id="y"></span> ci-beauty</span>
+  <span><a href="#" id="ig-foot" target="_blank" rel="noopener">Instagram</a> · <a href="#" id="wa-foot" target="_blank" rel="noopener">WhatsApp</a></span>
+</footer>
+
+<a class="wa" id="wa-float" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6l.4-.5c.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3zM12 21.8c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.2-.4C2.7 15.6 2.2 13.8 2.2 12 2.2 6.6 6.6 2.2 12 2.2c2.6 0 5.1 1 6.9 2.9 1.8 1.8 2.9 4.3 2.9 6.9 0 5.4-4.4 9.8-9.8 9.8zm8.3-18.1C18.1 1.5 15.1.3 12 .3 5.5.3.3 5.5.3 12c0 2.1.5 4.1 1.6 5.9L.2 24l6.3-1.6c1.7.9 3.6 1.4 5.5 1.4 6.5 0 11.7-5.2 11.7-11.7 0-3.1-1.2-6.1-3.4-8.3z"/></svg>
+</a>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ===================================================
+   CONFIGURA AQUÍ TUS DATOS
+   =================================================== */
+const WHATSAPP = '573000000000';            // tu número con 57 adelante, sin + ni espacios
+const INSTAGRAM = 'https://www.instagram.com/cibeautycol';
+
+/* ====== Enlaces de WhatsApp e Instagram ====== */
+const wa = msg => 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(msg);
+['wa-float','wa-cta','wa-foot'].forEach(id=>{
+  document.getElementById(id).href = wa('¡Hola ci-beauty! Quiero información sobre sus productos 💗');
+});
+['ig','ig-foot'].forEach(id=> document.getElementById(id).href = INSTAGRAM);
+document.getElementById('y').textContent = new Date().getFullYear();
+
+// Botón "Pedir" de cada producto
+document.querySelectorAll('.card').forEach(card=>{
+  card.querySelector('.buy').addEventListener('click', ()=>{
+    const name = card.querySelector('h3').textContent;
+    const price = card.querySelector('.price').textContent;
+    window.open(wa('¡Hola ci-beauty! Quiero pedir: ' + name + ' (' + price + ')'), '_blank');
+  });
+});
+
+// Filtros del catálogo
+document.querySelectorAll('.filters button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const cat = btn.dataset.cat;
+    document.querySelectorAll('.card').forEach(c=>{
+      c.classList.toggle('hide', cat!=='todo' && c.dataset.cat!==cat);
+    });
+  });
+});
+
+/* ====== Escena 3D: gema de cristal rosada ====== */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0xfbf1f4, 0.05);
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(0, 0, 8);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+const l1 = new THREE.PointLight(0xffd6e6, 2.4, 30); l1.position.set(4, 4, 6); scene.add(l1);
+const l2 = new THREE.PointLight(0xa070ff, 2.6, 30); l2.position.set(-5, -3, 2); scene.add(l2);
+const l3 = new THREE.PointLight(0xffffff, 1.0, 20); l3.position.set(0, -4, 5); scene.add(l3);
+
+const group = new THREE.Group(); scene.add(group);
+// Gema facetada (forma de diamante)
+const gemGeo = new THREE.OctahedronGeometry(1.9, 1);
+gemGeo.scale(1, 1.25, 1);
+const gem = new THREE.Mesh(gemGeo, new THREE.MeshPhysicalMaterial({
+  color:0xf3a6c4, metalness:0.15, roughness:0.06, clearcoat:1, clearcoatRoughness:0.04,
+  transparent:true, opacity:0.65, flatShading:true, side:THREE.DoubleSide
+}));
+group.add(gem);
+group.add(new THREE.LineSegments(new THREE.EdgesGeometry(gemGeo),
+  new THREE.LineBasicMaterial({color:0xd46f97, transparent:true, opacity:0.45})));
+
+// Perlas y destellos orbitando
+const orbs = [];
+for(let i=0;i<16;i++){
+  const pearl = i%2===0;
+  const m = new THREE.Mesh(
+    pearl ? new THREE.SphereGeometry(Math.random()*0.1+0.05, 24, 24)
+          : new THREE.OctahedronGeometry(Math.random()*0.16+0.06, 0),
+    new THREE.MeshPhysicalMaterial({color: pearl?0xffe4ee:0xb79be8, roughness:pearl?0.25:0.1, clearcoat:1, transparent:true, opacity:0.85, flatShading:!pearl})
+  );
+  m.userData = {r:2.6+Math.random()*1.7, a:Math.random()*Math.PI*2, y:(Math.random()-.5)*3.2, v:0.1+Math.random()*0.25};
+  group.add(m); orbs.push(m);
+}
+
+// Brillo flotante
+const N=1400, pos=new Float32Array(N*3);
+for(let i=0;i<N*3;i++) pos[i]=(Math.random()-.5)*30;
+const pGeo=new THREE.BufferGeometry(); pGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+const glitter=new THREE.Points(pGeo, new THREE.PointsMaterial({color:0xd46f97, size:0.03, transparent:true, opacity:0.5}));
+scene.add(glitter);
+
+let mx=0,my=0,scrollP=0;
+addEventListener('mousemove', e=>{ mx=e.clientX/innerWidth-.5; my=e.clientY/innerHeight-.5; });
+addEventListener('scroll', ()=>{
+  const max=document.body.scrollHeight-innerHeight;
+  scrollP = max>0 ? scrollY/max : 0;
+  document.getElementById('progress').style.width=(scrollP*100)+'%';
+});
+addEventListener('resize', ()=>{
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+const clock=new THREE.Clock();
+(function loop(){
+  const t=clock.getElapsedTime();
+  const targetX = innerWidth<760 ? 0 : Math.sin(scrollP*Math.PI*4)*2.3;
+  group.position.x += (targetX-group.position.x)*0.05;
+  group.rotation.y = t*0.18 + scrollP*Math.PI*2 + mx*0.5;
+  group.rotation.x = Math.sin(t*0.3)*0.15 + my*0.4;
+  camera.position.z = 8 - scrollP*2.5;
+  orbs.forEach(o=>{ const d=o.userData; d.a+=d.v*0.01;
+    o.position.set(Math.cos(d.a)*d.r, d.y+Math.sin(t+d.a)*0.2, Math.sin(d.a)*d.r);
+    o.rotation.x+=0.01; o.rotation.y+=0.008; });
+  glitter.rotation.y=t*0.012; glitter.position.y=-scrollP*4;
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+})();
+
+/* ====== Texto "decodificado" ====== */
+const CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*/<>[]';
+function scramble(el){
+  const final = el.dataset.text || (el.dataset.text = el.textContent);
+  let f=0; clearInterval(el._t);
+  el._t=setInterval(()=>{
+    el.textContent = final.split('').map((c,i)=> c===' '?' ': i<f/2?c:CHARS[Math.random()*CHARS.length|0]).join('');
+    if(++f>final.length*2){ clearInterval(el._t); el.textContent=final; }
+  },30);
+}
+document.querySelectorAll('.scramble').forEach(el=> el.addEventListener('mouseenter', ()=>scramble(el)));
+
+/* ====== Aparición al hacer scroll ====== */
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){ e.target.classList.add('on'); if(e.target.classList.contains('scramble')) scramble(e.target); }
+}),{threshold:.2});
+document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
