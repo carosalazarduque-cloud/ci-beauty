@@ -278,48 +278,62 @@ const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 0.9;
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0xfbf1f4, 0.05);
 const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
 camera.position.set(0, 0, 8);
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-const l1 = new THREE.PointLight(0xffd6e6, 2.4, 30); l1.position.set(4, 4, 6); scene.add(l1);
-const l2 = new THREE.PointLight(0xa070ff, 2.6, 30); l2.position.set(-5, -3, 2); scene.add(l2);
-const l3 = new THREE.PointLight(0xffffff, 1.0, 20); l3.position.set(0, -4, 5); scene.add(l3);
+scene.add(new THREE.AmbientLight(0xfff4f0, 0.55));
+const l1 = new THREE.PointLight(0xffe8dc, 1.1, 30); l1.position.set(4, 4, 6); scene.add(l1);
+const l2 = new THREE.PointLight(0xb08ad8, 1.2, 30); l2.position.set(-5, -3, 2); scene.add(l2);
+const l3 = new THREE.PointLight(0xffffff, 0.6, 20); l3.position.set(0, -4, 5); scene.add(l3);
 
 const group = new THREE.Group(); scene.add(group);
-// Brocha de maquillaje 3D
+// Brocha de maquillaje 3D (estilo luxury)
 const brush = new THREE.Group();
-// Mango
-const handleMat = new THREE.MeshPhysicalMaterial({color:0xd46f97, metalness:0.2, roughness:0.15, clearcoat:1, clearcoatRoughness:0.05});
-const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.25, 3.0, 48), handleMat);
+// Reflejos suaves de estudio para los metales y la laca
+const envCanvas = document.createElement('canvas'); envCanvas.width = 512; envCanvas.height = 256;
+const ec = envCanvas.getContext('2d');
+const envGr = ec.createLinearGradient(0, 0, 0, 256);
+envGr.addColorStop(0, '#2a1d22'); envGr.addColorStop(0.42, '#d9bfb8'); envGr.addColorStop(0.5, '#f4e4df'); envGr.addColorStop(0.6, '#8c6e6a'); envGr.addColorStop(1, '#140d10');
+ec.fillStyle = envGr; ec.fillRect(0, 0, 512, 256);
+ec.fillStyle = 'rgba(255,245,240,.85)'; ec.fillRect(70, 80, 50, 26); ec.fillRect(330, 70, 80, 18);
+const envTex = new THREE.CanvasTexture(envCanvas); envTex.mapping = THREE.EquirectangularReflectionMapping;
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envMap = pmrem.fromEquirectangular(envTex).texture;
+// Mango: laca color ciruela profundo
+const handleMat = new THREE.MeshPhysicalMaterial({color:0x2a0f1c, metalness:0.1, roughness:0.32, clearcoat:0.8, clearcoatRoughness:0.25, envMap:envMap, envMapIntensity:0.7});
+const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.24, 3.0, 64), handleMat);
 handle.position.y = -1.95; brush.add(handle);
-const cap = new THREE.Mesh(new THREE.SphereGeometry(0.25, 32, 16, 0, Math.PI*2, Math.PI/2, Math.PI/2), handleMat);
+const cap = new THREE.Mesh(new THREE.SphereGeometry(0.24, 48, 16, 0, Math.PI*2, Math.PI/2, Math.PI/2), handleMat);
 cap.position.y = -3.45; brush.add(cap);
-// Virola metálica (oro rosa)
-const ferrule = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.17, 0.9, 48),
-  new THREE.MeshPhysicalMaterial({color:0xf6d3c4, metalness:0.45, roughness:0.25, clearcoat:1}));
-ferrule.position.y = -0.0; brush.add(ferrule);
-// Cerdas: perfil de brocha para polvo, blanco en la base y rosa en la punta
+// Virola en oro rosa satinado + aro dorado
+const oroRosa = new THREE.MeshStandardMaterial({color:0xc4917f, metalness:1, roughness:0.32, envMap:envMap, envMapIntensity:1});
+const ferrule = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.16, 0.9, 64), oroRosa);
+brush.add(ferrule);
+const aro = new THREE.Mesh(new THREE.TorusGeometry(0.165, 0.025, 16, 64),
+  new THREE.MeshStandardMaterial({color:0xd8b07a, metalness:1, roughness:0.25, envMap:envMap, envMapIntensity:1}));
+aro.rotation.x = Math.PI/2; aro.position.y = -0.46; brush.add(aro);
+// Cerdas mate: nude en la base y ciruela en la punta
 const perfil = [[0.30,0],[0.42,0.3],[0.58,0.7],[0.70,1.1],[0.73,1.35],[0.68,1.6],[0.53,1.85],[0.30,2.02],[0.0,2.1]]
   .map(function(p){ return new THREE.Vector2(p[0], p[1]); });
-const bristGeo = new THREE.LatheGeometry(perfil, 72);
-const colores = [], pBase = new THREE.Color(0xfff6fa), pPunta = new THREE.Color(0xe98fb5);
+const bristGeo = new THREE.LatheGeometry(perfil, 96);
+const colores = [], pBase = new THREE.Color(0xb58f80), pPunta = new THREE.Color(0x3a1824);
 const posB = bristGeo.attributes.position;
-for (let i=0;i<posB.count;i++){ const c = pBase.clone().lerp(pPunta, Math.min(1, posB.getY(i)/2.1)); colores.push(c.r, c.g, c.b); }
+for (let i=0;i<posB.count;i++){ const k = Math.min(1, Math.max(0, (posB.getY(i)-0.3)/1.6)); const c = pBase.clone().lerp(pPunta, k); colores.push(c.r, c.g, c.b); }
 bristGeo.setAttribute('color', new THREE.Float32BufferAttribute(colores, 3));
-const bristles = new THREE.Mesh(bristGeo, new THREE.MeshStandardMaterial({vertexColors:true, roughness:0.85, metalness:0}));
+const bristles = new THREE.Mesh(bristGeo, new THREE.MeshStandardMaterial({vertexColors:true, roughness:1, metalness:0}));
 bristles.position.y = 0.45; brush.add(bristles);
-// Fibras sueltas para dar textura suave
+// Fibras finas en la punta
 const fibras = [];
-for (let i=0;i<260;i++){
-  const a = Math.random()*Math.PI*2, h = 0.9 + Math.random()*1.5, r = 0.55*Math.sin(Math.min(h,2.0)/2.1*Math.PI*0.95) + 0.12;
+for (let i=0;i<220;i++){
+  const a = Math.random()*Math.PI*2, h = 1.2 + Math.random()*0.9, r = 0.55*Math.sin(Math.min(h,2.0)/2.1*Math.PI*0.95) + 0.12;
   const x = Math.cos(a)*r, z = Math.sin(a)*r, y = h + 0.45;
-  fibras.push(x*0.85, y-0.12, z*0.85, x*1.12, y+0.06, z*1.12);
+  fibras.push(x*0.9, y-0.08, z*0.9, x*1.08, y+0.04, z*1.08);
 }
 const fibGeo = new THREE.BufferGeometry(); fibGeo.setAttribute('position', new THREE.Float32BufferAttribute(fibras, 3));
-brush.add(new THREE.LineSegments(fibGeo, new THREE.LineBasicMaterial({color:0xf3b6cd, transparent:true, opacity:0.55})));
+brush.add(new THREE.LineSegments(fibGeo, new THREE.LineBasicMaterial({color:0x6e3a4b, transparent:true, opacity:0.35})));
 brush.position.y = 0.55; brush.rotation.z = -0.55; brush.scale.setScalar(0.95);
 group.add(brush);
 
