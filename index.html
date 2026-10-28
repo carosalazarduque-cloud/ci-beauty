@@ -289,16 +289,39 @@ const l2 = new THREE.PointLight(0xa070ff, 2.6, 30); l2.position.set(-5, -3, 2); 
 const l3 = new THREE.PointLight(0xffffff, 1.0, 20); l3.position.set(0, -4, 5); scene.add(l3);
 
 const group = new THREE.Group(); scene.add(group);
-// Gema facetada (forma de diamante)
-const gemGeo = new THREE.OctahedronGeometry(1.9, 1);
-gemGeo.scale(1, 1.25, 1);
-const gem = new THREE.Mesh(gemGeo, new THREE.MeshPhysicalMaterial({
-  color:0xf3a6c4, metalness:0.15, roughness:0.06, clearcoat:1, clearcoatRoughness:0.04,
-  transparent:true, opacity:0.65, flatShading:true, side:THREE.DoubleSide
-}));
-group.add(gem);
-group.add(new THREE.LineSegments(new THREE.EdgesGeometry(gemGeo),
-  new THREE.LineBasicMaterial({color:0xd46f97, transparent:true, opacity:0.45})));
+// Brocha de maquillaje 3D
+const brush = new THREE.Group();
+// Mango
+const handleMat = new THREE.MeshPhysicalMaterial({color:0xd46f97, metalness:0.2, roughness:0.15, clearcoat:1, clearcoatRoughness:0.05});
+const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.25, 3.0, 48), handleMat);
+handle.position.y = -1.95; brush.add(handle);
+const cap = new THREE.Mesh(new THREE.SphereGeometry(0.25, 32, 16, 0, Math.PI*2, Math.PI/2, Math.PI/2), handleMat);
+cap.position.y = -3.45; brush.add(cap);
+// Virola metálica (oro rosa)
+const ferrule = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.17, 0.9, 48),
+  new THREE.MeshPhysicalMaterial({color:0xf6d3c4, metalness:0.45, roughness:0.25, clearcoat:1}));
+ferrule.position.y = -0.0; brush.add(ferrule);
+// Cerdas: perfil de brocha para polvo, blanco en la base y rosa en la punta
+const perfil = [[0.30,0],[0.42,0.3],[0.58,0.7],[0.70,1.1],[0.73,1.35],[0.68,1.6],[0.53,1.85],[0.30,2.02],[0.0,2.1]]
+  .map(function(p){ return new THREE.Vector2(p[0], p[1]); });
+const bristGeo = new THREE.LatheGeometry(perfil, 72);
+const colores = [], pBase = new THREE.Color(0xfff6fa), pPunta = new THREE.Color(0xe98fb5);
+const posB = bristGeo.attributes.position;
+for (let i=0;i<posB.count;i++){ const c = pBase.clone().lerp(pPunta, Math.min(1, posB.getY(i)/2.1)); colores.push(c.r, c.g, c.b); }
+bristGeo.setAttribute('color', new THREE.Float32BufferAttribute(colores, 3));
+const bristles = new THREE.Mesh(bristGeo, new THREE.MeshStandardMaterial({vertexColors:true, roughness:0.85, metalness:0}));
+bristles.position.y = 0.45; brush.add(bristles);
+// Fibras sueltas para dar textura suave
+const fibras = [];
+for (let i=0;i<260;i++){
+  const a = Math.random()*Math.PI*2, h = 0.9 + Math.random()*1.5, r = 0.55*Math.sin(Math.min(h,2.0)/2.1*Math.PI*0.95) + 0.12;
+  const x = Math.cos(a)*r, z = Math.sin(a)*r, y = h + 0.45;
+  fibras.push(x*0.85, y-0.12, z*0.85, x*1.12, y+0.06, z*1.12);
+}
+const fibGeo = new THREE.BufferGeometry(); fibGeo.setAttribute('position', new THREE.Float32BufferAttribute(fibras, 3));
+brush.add(new THREE.LineSegments(fibGeo, new THREE.LineBasicMaterial({color:0xf3b6cd, transparent:true, opacity:0.55})));
+brush.position.y = 0.55; brush.rotation.z = -0.55; brush.scale.setScalar(0.95);
+group.add(brush);
 
 // Perlas y destellos orbitando
 const orbs = [];
@@ -335,7 +358,7 @@ addEventListener('resize', ()=>{
 const clock=new THREE.Clock();
 (function loop(){
   const t=clock.getElapsedTime();
-  const targetX = innerWidth<760 ? 0 : Math.sin(scrollP*Math.PI*4)*2.3;
+  const targetX = innerWidth<760 ? 0 : Math.cos(scrollP*Math.PI*2.5)*2.4;
   group.position.x += (targetX-group.position.x)*0.05;
   group.rotation.y = t*0.18 + scrollP*Math.PI*2 + mx*0.5;
   group.rotation.x = Math.sin(t*0.3)*0.15 + my*0.4;
@@ -368,38 +391,44 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
 </script>
 <!-- ====================== CICI: asistente de CI Beauty ====================== -->
 <style>
-  .cici-btn{position:fixed;right:40px;bottom:132px;z-index:40;display:flex;align-items:center;gap:10px;padding:10px 16px 10px 10px;border:1px solid #c8a96a;border-radius:40px;background:#fffdf9;color:#5a4a36;font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;box-shadow:0 8px 24px rgba(120,90,50,.18);transition:transform .2s}
+  .cici-btn{position:fixed;right:40px;bottom:132px;z-index:40;display:flex;align-items:center;gap:10px;padding:10px 16px 10px 10px;border:1px solid #d46f97;border-radius:40px;background:#fffafc;color:#2b1a24;font-family:'Inter',sans-serif;font-size:13px;cursor:pointer;box-shadow:0 8px 24px rgba(140,70,100,.18);transition:transform .2s}
   .cici-btn:hover{transform:translateY(-2px)}
-  .cici-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(140deg,#f3e9dc,#d9bf8c);display:grid;place-items:center;color:#fff;font-weight:600;font-size:15px;flex:none}
-  .cici-panel{position:fixed;right:40px;bottom:132px;z-index:41;width:360px;max-width:calc(100vw - 32px);height:540px;max-height:calc(100vh - 160px);display:none;flex-direction:column;background:#fffdf9;border:1px solid #e6d6b8;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(120,90,50,.25);font-family:'Inter',sans-serif;color:#4a3d2e}
+  .cici-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(140deg,#ffe6f0,#e7d7ff);border:1px solid #f0d3df;display:block;overflow:hidden;flex:none}
+  .cici-eyes{transform-box:view-box;transform-origin:20px 18px;animation:cici-blink 4s infinite}
+  @keyframes cici-blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+  .cici-typing{display:flex;gap:4px;padding:12px 14px}
+  .cici-typing i{width:6px;height:6px;border-radius:50%;background:#d46f97;animation:cici-dot 1s infinite}
+  .cici-typing i:nth-child(2){animation-delay:.15s}.cici-typing i:nth-child(3){animation-delay:.3s}
+  @keyframes cici-dot{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+  .cici-panel{position:fixed;right:40px;bottom:132px;z-index:41;width:360px;max-width:calc(100vw - 32px);height:540px;max-height:calc(100vh - 160px);display:none;flex-direction:column;background:#fffafc;border:1px solid #f0d3df;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(140,70,100,.25);font-family:'Inter',sans-serif;color:#2b1a24}
   .cici-panel.open{display:flex}
-  .cici-head{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(120deg,#f3e9dc,#ead9bd);border-bottom:1px solid #e6d6b8}
+  .cici-head{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(120deg,#ffd9e8,#efe3fb);border-bottom:1px solid #f0d3df}
   .cici-head b{display:block;font-size:14px}
-  .cici-head small{font-size:11px;color:#8a7558}
-  .cici-x{margin-left:auto;background:none;border:none;font-size:20px;color:#8a7558;cursor:pointer;line-height:1}
-  .cici-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#fffdf9}
+  .cici-head small{font-size:11px;color:#86707c}
+  .cici-x{margin-left:auto;background:none;border:none;font-size:20px;color:#86707c;cursor:pointer;line-height:1}
+  .cici-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:#fffafc}
   .cici-m{max-width:85%;padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.5;white-space:pre-line}
-  .cici-m.bot{background:#f6eee2;border:1px solid #eadcc4;align-self:flex-start;border-bottom-left-radius:4px}
-  .cici-m.user{background:#c8a96a;color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
-  .cici-m a{color:#8f6d2c;font-weight:600}
+  .cici-m.bot{background:#fbf1f4;border:1px solid #f0d3df;align-self:flex-start;border-bottom-left-radius:4px}
+  .cici-m.user{background:#d46f97;color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .cici-m a{color:#b8507b;font-weight:600}
   .cici-chips{display:flex;flex-wrap:wrap;gap:6px;align-self:flex-start}
-  .cici-chips button{background:#fff;border:1px solid #c8a96a;color:#8f6d2c;border-radius:20px;padding:7px 12px;font-family:inherit;font-size:12px;cursor:pointer}
-  .cici-chips button:hover{background:#c8a96a;color:#fff}
-  .cici-form{display:flex;gap:8px;padding:12px;border-top:1px solid #eadcc4;background:#fff}
-  .cici-form input{flex:1;border:1px solid #e0cfae;border-radius:20px;padding:10px 14px;font-family:inherit;font-size:13px;outline:none;color:#4a3d2e;background:#fffdf9}
-  .cici-form input:focus{border-color:#c8a96a}
-  .cici-form button{border:none;background:#c8a96a;color:#fff;border-radius:20px;padding:0 16px;font-family:inherit;font-size:12px;cursor:pointer}
-  .cici-note{font-size:10px;color:#a08d70;text-align:center;padding:0 12px 10px;background:#fff}
+  .cici-chips button{background:#fff;border:1px solid #d46f97;color:#b8507b;border-radius:20px;padding:7px 12px;font-family:inherit;font-size:12px;cursor:pointer}
+  .cici-chips button:hover{background:#d46f97;color:#fff}
+  .cici-form{display:flex;gap:8px;padding:12px;border-top:1px solid #f0d3df;background:#fff}
+  .cici-form input{flex:1;border:1px solid #ebc6d6;border-radius:20px;padding:10px 14px;font-family:inherit;font-size:13px;outline:none;color:#2b1a24;background:#fffafc}
+  .cici-form input:focus{border-color:#d46f97}
+  .cici-form button{border:none;background:#d46f97;color:#fff;border-radius:20px;padding:0 16px;font-family:inherit;font-size:12px;cursor:pointer}
+  .cici-note{font-size:10px;color:#9c8ea8;text-align:center;padding:0 12px 10px;background:#fff}
   @media (max-width:760px){
     .cici-btn{right:26px;bottom:124px}
     .cici-panel{right:16px;bottom:16px;height:calc(100vh - 120px)}
   }
 </style>
 
-<button class="cici-btn" id="cici-btn" aria-label="Abrir chat con Cici"><span class="cici-av">C</span>Pregúntale a Cici</button>
+<button class="cici-btn" id="cici-btn" aria-label="Abrir chat con Cici"><span class="cici-av"><svg viewBox="0 0 40 40" width="100%" height="100%" aria-hidden="true"><g class="cici-eyes"><ellipse cx="14" cy="18" rx="2.2" ry="2.8" fill="#2b1a24"/><ellipse cx="26" cy="18" rx="2.2" ry="2.8" fill="#2b1a24"/><circle cx="14.8" cy="17" r=".8" fill="#fff"/><circle cx="26.8" cy="17" r=".8" fill="#fff"/></g><ellipse cx="10.5" cy="24" rx="3" ry="1.8" fill="#ff8fb8" opacity=".6"/><ellipse cx="29.5" cy="24" rx="3" ry="1.8" fill="#ff8fb8" opacity=".6"/><path d="M15.5 25 Q20 29.5 24.5 25" stroke="#2b1a24" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M31 5 l1 2.4 2.4 1 -2.4 1 -1 2.4 -1 -2.4 -2.4 -1 2.4 -1z" fill="#fff"/></svg></span>Pregúntale a Cici</button>
 <div class="cici-panel" id="cici-panel" role="dialog" aria-label="Chat con Cici">
   <div class="cici-head">
-    <span class="cici-av">C</span>
+    <span class="cici-av"><svg viewBox="0 0 40 40" width="100%" height="100%" aria-hidden="true"><g class="cici-eyes"><ellipse cx="14" cy="18" rx="2.2" ry="2.8" fill="#2b1a24"/><ellipse cx="26" cy="18" rx="2.2" ry="2.8" fill="#2b1a24"/><circle cx="14.8" cy="17" r=".8" fill="#fff"/><circle cx="26.8" cy="17" r=".8" fill="#fff"/></g><ellipse cx="10.5" cy="24" rx="3" ry="1.8" fill="#ff8fb8" opacity=".6"/><ellipse cx="29.5" cy="24" rx="3" ry="1.8" fill="#ff8fb8" opacity=".6"/><path d="M15.5 25 Q20 29.5 24.5 25" stroke="#2b1a24" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M31 5 l1 2.4 2.4 1 -2.4 1 -1 2.4 -1 -2.4 -2.4 -1 2.4 -1z" fill="#fff"/></svg></span>
     <div><b>Cici</b><small>Asistente automática de ci-beauty</small></div>
     <button class="cici-x" id="cici-x" aria-label="Cerrar">×</button>
   </div>
@@ -426,6 +455,11 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
     horario: ''    // Ej.: 'Lunes a sábado de 9:00 a.m. a 6:00 p.m.'
   };
 
+  /* IA: cuando tengas tu Worker de Cloudflare, pega aquí su dirección (termina en .workers.dev).
+     Si queda vacío (''), Cici funciona con respuestas programadas, sin IA. */
+  var CICI_API = '';
+  var historial = [];
+
   var $ = function(id){ return document.getElementById(id); };
   var msgs = $('cici-msgs'), panel = $('cici-panel'), started = false;
 
@@ -440,12 +474,13 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
       var c = document.createElement('div'); c.className = 'cici-chips';
       chips.forEach(function(ch){
         var b = document.createElement('button'); b.type = 'button'; b.textContent = ch;
-        b.onclick = function(){ c.remove(); responder(ch); };
+        b.onclick = function(){ c.remove(); responder(ch, true); };
         c.appendChild(b);
       });
       msgs.appendChild(c);
     }
     msgs.scrollTop = msgs.scrollHeight;
+    return true;
   }
   function user(t){
     var d = document.createElement('div'); d.className = 'cici-m user'; d.textContent = t; msgs.appendChild(d);
@@ -480,13 +515,43 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
 
   var estado = null;
 
-  function responder(texto){
+  function responder(texto, desdeBoton){
     user(texto);
     var t = sin(texto);
-    setTimeout(function(){ procesar(t, texto); }, 350);
+    setTimeout(function(){
+      if (seguridad(t, texto)) return;
+      if (CICI_API && !desdeBoton && estado === null) return preguntarIA(texto, t);
+      procesar(t, texto);
+    }, 350);
   }
 
-  function procesar(t, original){
+  function escribiendo(on){
+    var d = $('cici-typing');
+    if (on && !d){ d = document.createElement('div'); d.id = 'cici-typing'; d.className = 'cici-m bot cici-typing'; d.innerHTML = '<i></i><i></i><i></i>'; msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight; }
+    if (!on && d) d.remove();
+  }
+
+  /* Pregunta a la IA (a través de tu Worker). Si falla, responde sin IA. */
+  function preguntarIA(texto, t){
+    historial.push({role:'user', content:texto});
+    historial = historial.slice(-10);
+    escribiendo(true);
+    fetch(CICI_API, {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({messages: historial, catalogo: catalogo(), politicas: POLITICAS})})
+    .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(d){
+      escribiendo(false);
+      var txt = String(d.reply || '').trim(); if (!txt) throw new Error('vacio');
+      historial.push({role:'assistant', content:txt});
+      var pasar = txt.indexOf('[ASESORA]') !== -1;
+      var html = esc(txt.split('[ASESORA]').join('').trim());
+      if (pasar) html += '\n\n' + asesora('¡Hola ci-beauty! Vengo del chat de Cici: ' + texto);
+      bot(html, ['Ver productos', 'Hablar con una asesora']);
+    })
+    .catch(function(){ escribiendo(false); procesar(t, texto); });
+  }
+
+  function seguridad(t, original){
     /* 1. Datos sensibles: nunca pedirlos ni guardarlos */
     if (/\d[\d\s-]{11,}\d/.test(original) || /contrasen|clave|cvv|tarjeta de credito|numero de tarjeta|cedula/.test(t)){
       estado = null;
@@ -497,6 +562,10 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
       estado = null;
       return bot('Lamento que estés pasando por eso. Suspende el uso del producto y lava la zona con agua. Si la reacción es fuerte, no mejora o tienes dificultad para respirar, busca atención médica de inmediato.\n\nCuéntanos qué pasó para ayudarte: ' + asesora('¡Hola ci-beauty! Tuve una reacción con un producto y necesito ayuda.'));
     }
+    return false;
+  }
+
+  function procesar(t, original){
     /* 3. Flujo de recomendación */
     if (estado === 'tipo-piel'){
       estado = null;
@@ -556,7 +625,7 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
       return bot('¡Hola! ¿En qué te ayudo?', MENU);
     }
     if (/gracias/.test(t)){
-      return bot('¡Con mucho gusto! Aquí estoy si necesitas algo más 💛', MENU);
+      return bot('¡Con mucho gusto! Aquí estoy si necesitas algo más 💗', MENU);
     }
     /* 5. Sin respuesta: no inventa */
     bot('No tengo esa información y no quiero darte un dato equivocado. ' + asesora('¡Hola ci-beauty! Tengo esta pregunta: ' + original), MENU);
