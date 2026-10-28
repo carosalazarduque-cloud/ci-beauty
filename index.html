@@ -290,61 +290,32 @@ const l2 = new THREE.PointLight(0xb08ad8, 1.2, 30); l2.position.set(-5, -3, 2); 
 const l3 = new THREE.PointLight(0xffffff, 0.6, 20); l3.position.set(0, -4, 5); scene.add(l3);
 
 const group = new THREE.Group(); scene.add(group);
-// Brocha doble CI BEAUTY (diseño propio, estilo luxury)
-const brush = new THREE.Group();
-// Reflejos suaves de estudio para los metales y la laca
-const envCanvas = document.createElement('canvas'); envCanvas.width = 512; envCanvas.height = 256;
-const ec = envCanvas.getContext('2d');
-const envGr = ec.createLinearGradient(0, 0, 0, 256);
-envGr.addColorStop(0, '#2a1d22'); envGr.addColorStop(0.42, '#d9bfb8'); envGr.addColorStop(0.5, '#f4e4df'); envGr.addColorStop(0.6, '#8c6e6a'); envGr.addColorStop(1, '#140d10');
-ec.fillStyle = envGr; ec.fillRect(0, 0, 512, 256);
-ec.fillStyle = 'rgba(255,245,240,.85)'; ec.fillRect(70, 80, 50, 26); ec.fillRect(330, 70, 80, 18);
-const envTex = new THREE.CanvasTexture(envCanvas); envTex.mapping = THREE.EquirectangularReflectionMapping;
-const pmrem = new THREE.PMREMGenerator(renderer);
-const envMap = pmrem.fromEquirectangular(envTex).texture;
-// Mangos: laca ciruela profunda
-const handleMat = new THREE.MeshPhysicalMaterial({color:0x2a0f1c, metalness:0.1, roughness:0.38, clearcoat:0.7, clearcoatRoughness:0.3, envMap:envMap, envMapIntensity:0.6});
-const mangoArriba = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.19, 1.35, 64), handleMat);
-mangoArriba.position.y = 1.225; brush.add(mangoArriba);
-const mangoAbajo = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.33, 1.35, 64), handleMat);
-mangoAbajo.position.y = -1.225; brush.add(mangoAbajo);
-// Banda central en oro rosa con el nombre grabado
-const tx = document.createElement('canvas'); tx.width = 1024; tx.height = 256;
-const tc = tx.getContext('2d');
-const bandGr = tc.createLinearGradient(0, 0, 0, 256);
-bandGr.addColorStop(0, '#b98272'); bandGr.addColorStop(0.5, '#e2b8a6'); bandGr.addColorStop(1, '#b98272');
-tc.fillStyle = bandGr; tc.fillRect(0, 0, 1024, 256);
-tc.fillStyle = '#3a1824'; tc.textAlign = 'center'; tc.textBaseline = 'middle';
-tc.font = '600 46px Inter, Helvetica, Arial, sans-serif';
-if (tc.letterSpacing !== undefined) tc.letterSpacing = '8px';
-tc.fillText('CI BEAUTY', 256, 128); tc.fillText('CI BEAUTY', 768, 128);
-const bandTex = new THREE.CanvasTexture(tx);
-bandTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-const banda = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 1.1, 96, 1, true),
-  new THREE.MeshStandardMaterial({map:bandTex, metalness:0.75, roughness:0.3, envMap:envMap, envMapIntensity:0.9}));
-banda.rotation.y = -Math.PI/2; brush.add(banda);
-// Aros dorados en los extremos de la banda
-const oro = new THREE.MeshStandardMaterial({color:0xd8b07a, metalness:1, roughness:0.25, envMap:envMap, envMapIntensity:1});
-[0.55, -0.55].forEach(function(y){
-  const aro = new THREE.Mesh(new THREE.TorusGeometry(0.195, 0.018, 16, 64), oro);
-  aro.rotation.x = Math.PI/2; aro.position.y = y; brush.add(aro);
-});
-// Cerdas: ciruela en la base y rubor claro en la punta
-function cerdas(perfil, largo, invertir){
-  const geo = new THREE.LatheGeometry(perfil.map(function(p){ return new THREE.Vector2(p[0], p[1]); }), 96);
-  const col = [], base = new THREE.Color(0x3a1824), punta = new THREE.Color(0xf3d6e0), pos = geo.attributes.position;
-  for (let i=0;i<pos.count;i++){ const k = Math.min(1, Math.max(0, (pos.getY(i) - largo*0.45) / (largo*0.5))); const c = base.clone().lerp(punta, k); col.push(c.r, c.g, c.b); }
-  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
-  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({vertexColors:true, roughness:1, metalness:0}));
-  if (invertir) m.rotation.x = Math.PI;
-  return m;
-}
-const arriba = cerdas([[0.30,0],[0.38,0.25],[0.46,0.55],[0.49,0.75],[0.46,0.9],[0.32,1.0],[0.0,1.04]], 1.04, false);
-arriba.position.y = 1.88; brush.add(arriba);
-const abajo = cerdas([[0.32,0],[0.42,0.25],[0.56,0.6],[0.63,0.85],[0.60,1.02],[0.42,1.14],[0.0,1.18]], 1.18, true);
-abajo.position.y = -1.88; brush.add(abajo);
-brush.position.y = 0.1; brush.rotation.z = -0.5; brush.scale.setScalar(1.0);
-group.add(brush);
+// Brocha CI BEAUTY (foto de la marca, recortada sobre el fondo)
+const BROCHA_IMG = 'image.png';
+const BROCHA_MASK = 'data:image/webp;base64,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';
+const brushMat = new THREE.MeshBasicMaterial({transparent:true, depthWrite:false, toneMapped:false, opacity:0});
+const brush = new THREE.Mesh(new THREE.PlaneGeometry(4.0, 6.0), brushMat);
+scene.add(brush);
+(function(){
+  const img = new Image(), mask = new Image(); let listas = 0;
+  function listo(){
+    if (++listas < 2) return;
+    const cv = document.createElement('canvas'); cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+    const cx = cv.getContext('2d');
+    cx.drawImage(mask, 0, 0, cv.width, cv.height);
+    const md = cx.getImageData(0, 0, cv.width, cv.height);
+    cx.clearRect(0, 0, cv.width, cv.height); cx.drawImage(img, 0, 0);
+    const id = cx.getImageData(0, 0, cv.width, cv.height);
+    for (let i=0;i<id.data.length;i+=4) id.data[i+3] = md.data[i];
+    cx.putImageData(id, 0, 0);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    brushMat.map = tex; brushMat.needsUpdate = true;
+  }
+  img.onload = listo; mask.onload = listo;
+  img.src = BROCHA_IMG; mask.src = BROCHA_MASK;
+})();
+// fin brocha
 
 // Perlas y destellos orbitando
 const orbs = [];
@@ -383,6 +354,9 @@ const clock=new THREE.Clock();
   const t=clock.getElapsedTime();
   const targetX = innerWidth<760 ? 0 : Math.cos(scrollP*Math.PI*2.5)*2.4;
   group.position.x += (targetX-group.position.x)*0.05;
+  brush.position.x = group.position.x; brush.position.y = 0.1 + Math.sin(t*0.8)*0.08;
+  brush.rotation.y = Math.sin(t*0.5)*0.18 + mx*0.25; brush.rotation.x = my*0.15;
+  if (brushMat.map && brushMat.opacity < 1) brushMat.opacity = Math.min(1, brushMat.opacity + 0.04);
   group.rotation.y = Math.sin(t*0.35)*0.5 + scrollP*Math.PI*2 + mx*0.5;
   group.rotation.x = Math.sin(t*0.3)*0.15 + my*0.4;
   camera.position.z = 8 - scrollP*2.5;
