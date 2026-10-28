@@ -403,6 +403,7 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
   .cici-btn.cc-launch{background:none;border:none;box-shadow:none;padding:0;width:150px;right:18px;bottom:20px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;animation:cc-flota 3.2s ease-in-out infinite;filter:drop-shadow(0 12px 18px rgba(140,70,100,.25))}
   .cc-launch img{width:100%;height:auto;display:block;pointer-events:none;-webkit-user-drag:none}
   .cc-launch.cc-drag{cursor:grabbing;animation-play-state:paused}
+  .cc-launch.cc-paseo{transition:left 5.5s ease-in-out, top 5.5s ease-in-out}
   .cc-launch:hover{animation-play-state:paused}
   @keyframes cc-flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
   .cc-face{background:#fbe7ef url(cc/image.png) no-repeat;background-size:210%;background-position:33% 20%}
@@ -658,13 +659,13 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
     setTimeout(function(){ $('cici-in').focus(); }, 100);
   }
   $('cici-btn').onclick = abrir;
-  /* CC se puede arrastrar por toda la página (y recuerda dónde la dejaste) */
+  /* CC se puede arrastrar por toda la página */
   (function(){
     var b = $('cici-btn'), arrastrando = false, movido = false, sx, sy, bx, by;
     function limitar(x, y){ var w = b.offsetWidth, h = b.offsetHeight; return [Math.max(0, Math.min(innerWidth - w, x)), Math.max(0, Math.min(innerHeight - h, y))]; }
     function poner(x, y){ var p = limitar(x, y); b.style.left = p[0] + 'px'; b.style.top = p[1] + 'px'; b.style.right = 'auto'; b.style.bottom = 'auto'; }
     try { var g = JSON.parse(localStorage.getItem('cc-pos') || 'null'); if (g) poner(g[0] * innerWidth, g[1] * innerHeight); } catch (e) {}
-    b.addEventListener('pointerdown', function(e){ arrastrando = true; movido = false; sx = e.clientX; sy = e.clientY; var r = b.getBoundingClientRect(); bx = r.left; by = r.top; try { b.setPointerCapture(e.pointerId); } catch (er) {} });
+    b.addEventListener('pointerdown', function(e){ arrastrando = true; movido = false; sx = e.clientX; sy = e.clientY; var r = b.getBoundingClientRect(); b.classList.remove('cc-paseo'); poner(r.left, r.top); bx = r.left; by = r.top; try { b.setPointerCapture(e.pointerId); } catch (er) {} });
     b.addEventListener('pointermove', function(e){
       if (!arrastrando) return;
       var dx = e.clientX - sx, dy = e.clientY - sy;
@@ -677,6 +678,19 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
     });
     b.addEventListener('click', function(e){ if (movido){ e.stopImmediatePropagation(); e.preventDefault(); movido = false; } }, true);
     addEventListener('resize', function(){ if (b.style.left){ var r = b.getBoundingClientRect(); poner(r.left, r.top); } });
+    /* CC se pasea sola por la página. Se detiene si la tocan, si pasan el mouse encima o si el chat está abierto. */
+    var pausa = false;
+    function pasear(){
+      if (arrastrando || pausa || document.hidden || $('cici-panel').classList.contains('open')) return;
+      var w = b.offsetWidth, h = b.offsetHeight, movil = innerWidth < 760;
+      var minY = movil ? innerHeight * 0.55 : 70;
+      var x = Math.random() * Math.max(0, innerWidth - w), y = minY + Math.random() * Math.max(0, innerHeight - h - minY);
+      b.classList.add('cc-paseo'); poner(x, y);
+    }
+    b.addEventListener('mouseenter', function(){ pausa = true; });
+    b.addEventListener('mouseleave', function(){ pausa = false; });
+    var calma = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!calma){ setTimeout(pasear, 2500); setInterval(pasear, 7000); }
   })();
   $('cici-x').onclick = function(){ panel.classList.remove('open'); $('cici-btn').style.display = ''; };
   $('cici-form').onsubmit = function(e){
