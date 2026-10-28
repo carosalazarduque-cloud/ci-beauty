@@ -400,6 +400,19 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
   .cici-typing i{width:6px;height:6px;border-radius:50%;background:#d46f97;animation:cici-dot 1s infinite}
   .cici-typing i:nth-child(2){animation-delay:.15s}.cici-typing i:nth-child(3){animation-delay:.3s}
   @keyframes cici-dot{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+  .cici-btn.cc-launch{background:none;border:none;box-shadow:none;padding:0;width:240px;right:18px;bottom:20px;animation:cc-flota 3.2s ease-in-out infinite;filter:drop-shadow(0 12px 18px rgba(140,70,100,.25))}
+  .cc-launch img{width:100%;height:auto;display:block}
+  .cc-launch:hover{animation-play-state:paused}
+  @keyframes cc-flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  .cc-face{background:#fbe7ef url(cc/image.png) no-repeat;background-size:210%;background-position:33% 20%}
+  .cc-prods{display:grid;gap:8px;margin:8px 0 4px;white-space:normal}
+  .cc-prod{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #f0d3df;border-radius:12px;padding:8px}
+  .cc-prod img,.cc-prod i{width:42px;height:42px;border-radius:8px;object-fit:cover;flex:none;background:linear-gradient(140deg,#ffe6f0,#e7d7ff)}
+  .cc-prod div{flex:1;min-width:0}
+  .cc-prod b{display:block;font-size:12px;line-height:1.3}
+  .cc-prod span{font-size:11px;color:#86707c}
+  .cc-prod a{font-size:11px;text-decoration:none;border:1px solid #d46f97;color:#b8507b;border-radius:14px;padding:5px 10px;font-weight:600;flex:none}
+  .cc-prod a:hover{background:#d46f97;color:#fff}
   .cici-panel{position:fixed;right:40px;bottom:64px;z-index:41;width:360px;max-width:calc(100vw - 32px);height:540px;max-height:calc(100vh - 110px);display:none;flex-direction:column;background:#fffafc;border:1px solid #f0d3df;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(140,70,100,.25);font-family:'Inter',sans-serif;color:#2b1a24}
   .cici-panel.open{display:flex}
   .cici-head{display:flex;align-items:center;gap:10px;padding:14px 16px;background:linear-gradient(120deg,#ffd9e8,#efe3fb);border-bottom:1px solid #f0d3df}
@@ -420,16 +433,16 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
   .cici-form button{border:none;background:#d46f97;color:#fff;border-radius:20px;padding:0 16px;font-family:inherit;font-size:12px;cursor:pointer}
   .cici-note{font-size:10px;color:#9c8ea8;text-align:center;padding:0 12px 10px;background:#fff}
   @media (max-width:760px){
-    .cici-btn{right:26px;bottom:56px}
+    .cici-btn.cc-launch{right:6px;bottom:10px;width:130px}
     .cici-panel{right:16px;bottom:16px;height:calc(100vh - 120px)}
   }
 </style>
 
-<button class="cici-btn" id="cici-btn" aria-label="Abrir chat con Cici"><span class="cici-av"><svg viewBox="0 0 40 40" width="100%" height="100%" aria-hidden="true"><g class="cici-eyes"><ellipse cx="14" cy="18" rx="2.2" ry="2.8" fill="#2b1a24"/><ellipse cx="26" cy="18" rx="2.2" ry="2.8" fill="#2b1a24"/><circle cx="14.8" cy="17" r=".8" fill="#fff"/><circle cx="26.8" cy="17" r=".8" fill="#fff"/></g><ellipse cx="10.5" cy="24" rx="3" ry="1.8" fill="#ff8fb8" opacity=".6"/><ellipse cx="29.5" cy="24" rx="3" ry="1.8" fill="#ff8fb8" opacity=".6"/><path d="M15.5 25 Q20 29.5 24.5 25" stroke="#2b1a24" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M31 5 l1 2.4 2.4 1 -2.4 1 -1 2.4 -1 -2.4 -2.4 -1 2.4 -1z" fill="#fff"/></svg></span>Pregúntale a Cici</button>
-<div class="cici-panel" id="cici-panel" role="dialog" aria-label="Chat con Cici">
+<button class="cici-btn cc-launch" id="cici-btn" aria-label="Abrir chat con CC, asistente de ci-beauty"><img src="cc/image.png" alt="CC, asistente de ci-beauty: Hola, soy CC, ¿en qué puedo ayudarte hoy?"></button>
+<div class="cici-panel" id="cici-panel" role="dialog" aria-label="Chat con CC">
   <div class="cici-head">
-    <span class="cici-av"><svg viewBox="0 0 40 40" width="100%" height="100%" aria-hidden="true"><g class="cici-eyes"><ellipse cx="14" cy="18" rx="2.2" ry="2.8" fill="#2b1a24"/><ellipse cx="26" cy="18" rx="2.2" ry="2.8" fill="#2b1a24"/><circle cx="14.8" cy="17" r=".8" fill="#fff"/><circle cx="26.8" cy="17" r=".8" fill="#fff"/></g><ellipse cx="10.5" cy="24" rx="3" ry="1.8" fill="#ff8fb8" opacity=".6"/><ellipse cx="29.5" cy="24" rx="3" ry="1.8" fill="#ff8fb8" opacity=".6"/><path d="M15.5 25 Q20 29.5 24.5 25" stroke="#2b1a24" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M31 5 l1 2.4 2.4 1 -2.4 1 -1 2.4 -1 -2.4 -2.4 -1 2.4 -1z" fill="#fff"/></svg></span>
-    <div><b>Cici</b><small>Asistente automática de ci-beauty</small></div>
+    <span class="cici-av cc-face"></span>
+    <div><b>CC</b><small>Asistente automática de ci-beauty</small></div>
     <button class="cici-x" id="cici-x" aria-label="Cerrar">×</button>
   </div>
   <div class="cici-msgs" id="cici-msgs"></div>
@@ -437,14 +450,14 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
     <input id="cici-in" type="text" placeholder="Escribe tu pregunta..." autocomplete="off">
     <button type="submit">Enviar</button>
   </form>
-  <div class="cici-note">Cici es un asistente automático, no una persona. No compartas datos de pago ni documentos.</div>
+  <div class="cici-note">CC es un asistente automático, no una persona. No compartas datos de pago ni documentos.</div>
 </div>
 
 <script>
 (function(){
   /* =======================================================
      POLÍTICAS DE CI-BEAUTY — complétalas con información real.
-     Si un campo queda vacío (''), Cici NO inventa nada:
+     Si un campo queda vacío (''), CC NO inventa nada:
      dice que la información se confirma por WhatsApp.
      ======================================================= */
   var POLITICAS = {
@@ -456,7 +469,7 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
   };
 
   /* IA: cuando tengas tu Worker de Cloudflare, pega aquí su dirección (termina en .workers.dev).
-     Si queda vacío (''), Cici funciona con respuestas programadas, sin IA. */
+     Si queda vacío (''), CC funciona con respuestas programadas, sin IA. */
   var CICI_API = '';
   var historial = [];
 
@@ -487,7 +500,7 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
     msgs.scrollTop = msgs.scrollHeight;
   }
   function asesora(texto){
-    return '<a href="' + waLink(texto || '¡Hola ci-beauty! Vengo del chat de Cici y tengo una pregunta.') + '" target="_blank" rel="noopener">Escribir a una asesora por WhatsApp →</a>';
+    return '<a href="' + waLink(texto || '¡Hola ci-beauty! Vengo del chat de CC y tengo una pregunta.') + '" target="_blank" rel="noopener">Escribir a una asesora por WhatsApp →</a>';
   }
   var MENU = ['Ver productos', 'Recomiéndame algo', 'Envíos', 'Pagos', 'Cambios y devoluciones', 'Hablar con una asesora'];
 
@@ -497,7 +510,8 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
     document.querySelectorAll('#catalogo .card').forEach(function(c){
       if (cat && c.dataset.cat !== cat) return;
       var precio = c.querySelector('.price').textContent.trim();
-      out.push({ nombre: c.querySelector('h3').textContent.trim(), cat: c.dataset.cat,
+      var im = c.querySelector('.img img');
+      out.push({ nombre: c.querySelector('h3').textContent.trim(), cat: c.dataset.cat, foto: im ? im.src : '',
                  precio: /^\$?0+[.,]?0*$/.test(precio.replace('$','')) ? 'precio por confirmar' : precio });
     });
     return out;
@@ -505,7 +519,10 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
   function listar(cat){
     var p = catalogo(cat);
     if (!p.length) return 'Por ahora no tengo productos cargados en esa categoría. ' + asesora();
-    return p.map(function(x){ return '• ' + esc(x.nombre) + ' — ' + esc(x.precio); }).join('\n');
+    return '<div class="cc-prods">' + p.map(function(x){
+      var foto = x.foto ? '<img src="' + esc(x.foto) + '" alt="">' : '<i></i>';
+      return '<div class="cc-prod">' + foto + '<div><b>' + esc(x.nombre) + '</b><span>' + esc(x.precio) + '</span></div><a href="' + waLink('¡Hola ci-beauty! Quiero pedir: ' + x.nombre + ' (' + x.precio + ')') + '" target="_blank" rel="noopener">Pedir</a></div>';
+    }).join('') + '</div>';
   }
   function politica(clave, tema){
     if (POLITICAS[clave]) return esc(POLITICAS[clave]);
@@ -545,7 +562,7 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
       historial.push({role:'assistant', content:txt});
       var pasar = txt.indexOf('[ASESORA]') !== -1;
       var html = esc(txt.split('[ASESORA]').join('').trim());
-      if (pasar) html += '\n\n' + asesora('¡Hola ci-beauty! Vengo del chat de Cici: ' + texto);
+      if (pasar) html += '\n\n' + asesora('¡Hola ci-beauty! Vengo del chat de CC: ' + texto);
       bot(html, ['Ver productos', 'Hablar con una asesora']);
     })
     .catch(function(){ escribiendo(false); procesar(t, texto); });
@@ -635,7 +652,7 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
     panel.classList.add('open'); $('cici-btn').style.display = 'none';
     if (!started){
       started = true;
-      bot('¡Hola! Soy Cici, la asistente automática de ci-beauty ✨\nTe ayudo a conocer nuestros productos de skincare, maquillaje y cabello. ¿Qué necesitas?', MENU);
+      bot('¡Hola! Soy CC, la asistente automática de ci-beauty ✨\nTe ayudo a conocer nuestros productos de skincare, maquillaje y cabello. ¿Qué necesitas?', MENU);
     }
     setTimeout(function(){ $('cici-in').focus(); }, 100);
   }
