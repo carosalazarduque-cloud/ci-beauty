@@ -400,8 +400,9 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
   .cici-typing i{width:6px;height:6px;border-radius:50%;background:#d46f97;animation:cici-dot 1s infinite}
   .cici-typing i:nth-child(2){animation-delay:.15s}.cici-typing i:nth-child(3){animation-delay:.3s}
   @keyframes cici-dot{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
-  .cici-btn.cc-launch{background:none;border:none;box-shadow:none;padding:0;width:240px;right:18px;bottom:20px;animation:cc-flota 3.2s ease-in-out infinite;filter:drop-shadow(0 12px 18px rgba(140,70,100,.25))}
-  .cc-launch img{width:100%;height:auto;display:block}
+  .cici-btn.cc-launch{background:none;border:none;box-shadow:none;padding:0;width:150px;right:18px;bottom:20px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;animation:cc-flota 3.2s ease-in-out infinite;filter:drop-shadow(0 12px 18px rgba(140,70,100,.25))}
+  .cc-launch img{width:100%;height:auto;display:block;pointer-events:none;-webkit-user-drag:none}
+  .cc-launch.cc-drag{cursor:grabbing;animation-play-state:paused}
   .cc-launch:hover{animation-play-state:paused}
   @keyframes cc-flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
   .cc-face{background:#fbe7ef url(cc/image.png) no-repeat;background-size:210%;background-position:33% 20%}
@@ -433,12 +434,12 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
   .cici-form button{border:none;background:#d46f97;color:#fff;border-radius:20px;padding:0 16px;font-family:inherit;font-size:12px;cursor:pointer}
   .cici-note{font-size:10px;color:#9c8ea8;text-align:center;padding:0 12px 10px;background:#fff}
   @media (max-width:760px){
-    .cici-btn.cc-launch{right:6px;bottom:10px;width:130px}
+    .cici-btn.cc-launch{right:6px;bottom:10px;width:100px}
     .cici-panel{right:16px;bottom:16px;height:calc(100vh - 120px)}
   }
 </style>
 
-<button class="cici-btn cc-launch" id="cici-btn" aria-label="Abrir chat con CC, asistente de ci-beauty"><img src="cc/image.png" alt="CC, asistente de ci-beauty: Hola, soy CC, ¿en qué puedo ayudarte hoy?"></button>
+<button class="cici-btn cc-launch" id="cici-btn" aria-label="Abrir chat con CC, asistente de ci-beauty"><img src="cc/image.png" draggable="false" alt="CC, asistente de ci-beauty: Hola, soy CC, ¿en qué puedo ayudarte hoy?"></button>
 <div class="cici-panel" id="cici-panel" role="dialog" aria-label="Chat con CC">
   <div class="cici-head">
     <span class="cici-av cc-face"></span>
@@ -657,6 +658,26 @@ document.querySelectorAll('.reveal, .eyebrow').forEach(el=>io.observe(el));
     setTimeout(function(){ $('cici-in').focus(); }, 100);
   }
   $('cici-btn').onclick = abrir;
+  /* CC se puede arrastrar por toda la página (y recuerda dónde la dejaste) */
+  (function(){
+    var b = $('cici-btn'), arrastrando = false, movido = false, sx, sy, bx, by;
+    function limitar(x, y){ var w = b.offsetWidth, h = b.offsetHeight; return [Math.max(0, Math.min(innerWidth - w, x)), Math.max(0, Math.min(innerHeight - h, y))]; }
+    function poner(x, y){ var p = limitar(x, y); b.style.left = p[0] + 'px'; b.style.top = p[1] + 'px'; b.style.right = 'auto'; b.style.bottom = 'auto'; }
+    try { var g = JSON.parse(localStorage.getItem('cc-pos') || 'null'); if (g) poner(g[0] * innerWidth, g[1] * innerHeight); } catch (e) {}
+    b.addEventListener('pointerdown', function(e){ arrastrando = true; movido = false; sx = e.clientX; sy = e.clientY; var r = b.getBoundingClientRect(); bx = r.left; by = r.top; try { b.setPointerCapture(e.pointerId); } catch (er) {} });
+    b.addEventListener('pointermove', function(e){
+      if (!arrastrando) return;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (!movido && Math.abs(dx) + Math.abs(dy) < 6) return;
+      movido = true; b.classList.add('cc-drag'); poner(bx + dx, by + dy);
+    });
+    b.addEventListener('pointerup', function(){
+      arrastrando = false; b.classList.remove('cc-drag');
+      if (movido){ var r = b.getBoundingClientRect(); try { localStorage.setItem('cc-pos', JSON.stringify([r.left / innerWidth, r.top / innerHeight])); } catch (e) {} }
+    });
+    b.addEventListener('click', function(e){ if (movido){ e.stopImmediatePropagation(); e.preventDefault(); movido = false; } }, true);
+    addEventListener('resize', function(){ if (b.style.left){ var r = b.getBoundingClientRect(); poner(r.left, r.top); } });
+  })();
   $('cici-x').onclick = function(){ panel.classList.remove('open'); $('cici-btn').style.display = ''; };
   $('cici-form').onsubmit = function(e){
     e.preventDefault();
